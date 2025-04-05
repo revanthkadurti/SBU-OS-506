@@ -1,0 +1,77 @@
+diff --git a/arch/x86/entry/syscalls/syscall_64.tbl b/arch/x86/entry/syscalls/syscall_64.tbl
+index 7e8d46f4147f..b161661b9f81 100644
+--- a/arch/x86/entry/syscalls/syscall_64.tbl
++++ b/arch/x86/entry/syscalls/syscall_64.tbl
+@@ -383,7 +383,7 @@
+ 459	common	lsm_get_self_attr	sys_lsm_get_self_attr
+ 460	common	lsm_set_self_attr	sys_lsm_set_self_attr
+ 461	common	lsm_list_modules	sys_lsm_list_modules
+-
++462	64	s2_encrypt		sys_s2_encrypt
+ #
+ # Due to a historical design error, certain syscalls are numbered differently
+ # in x32 as compared to native x86_64.  These syscalls have numbers 512-547.
+diff --git a/include/linux/syscalls.h b/include/linux/syscalls.h
+index 77eb9b0e7685..d7b45eb70348 100644
+--- a/include/linux/syscalls.h
++++ b/include/linux/syscalls.h
+@@ -1294,4 +1294,5 @@ int __sys_getsockopt(int fd, int level, int optname, char __user *optval,
+ 		int __user *optlen);
+ int __sys_setsockopt(int fd, int level, int optname, char __user *optval,
+ 		int optlen);
++asmlinkage long sys_s2_encrypt(char __user *str, int key);
+ #endif
+diff --git a/kernel/Makefile b/kernel/Makefile
+index ce105a5558fc..fa846d3dc92b 100644
+--- a/kernel/Makefile
++++ b/kernel/Makefile
+@@ -51,7 +51,7 @@ obj-y += livepatch/
+ obj-y += dma/
+ obj-y += entry/
+ obj-$(CONFIG_MODULES) += module/
+-
++obj-y += s2_encrypt.o
+ obj-$(CONFIG_KCMP) += kcmp.o
+ obj-$(CONFIG_FREEZER) += freezer.o
+ obj-$(CONFIG_PROFILING) += profile.o
+diff --git a/kernel/s2_encrypt.c b/kernel/s2_encrypt.c
+new file mode 100644
+index 000000000000..c6c626449f66
+--- /dev/null
++++ b/kernel/s2_encrypt.c
+@@ -0,0 +1,35 @@
++#include <linux/syscalls.h>
++#include <linux/kernel.h>
++#include <linux/err.h>
++#define MAX 256
++
++SYSCALL_DEFINE2(s2_encrypt, char __user *, str, int, key)
++{
++	int code = -EINVAL, i = 0;
++	char *input;
++	int length = strnlen_user(str, MAX);
++	if(length > MAX) {
++		return code;
++	}
++
++	input = kmalloc(length, GFP_KERNEL);
++
++ 	if (copy_from_user(input, str, length) != 0) {
++ 		return -EFAULT;
++ 	}
++
++ 	if (input[0] == '\0' || key < 1 || key > 5) {
++ 		return code;
++ 	}
++
++ 	while (input[i]!='\0') {
++	{	
++ 		input[i] = input[i] + key;
++ 		i++;
++ 	}
++ 	printk("%s\n", input);
++
++ 	kfree(input);
++
++ 	return 0;
++}

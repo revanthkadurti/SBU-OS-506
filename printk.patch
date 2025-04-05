@@ -1,0 +1,30 @@
+diff --git a/net/socket.c b/net/socket.c
+index ed3df2f749bf..7f18e2075311 100644
+--- a/net/socket.c
++++ b/net/socket.c
+@@ -1993,7 +1993,7 @@ int __sys_accept4(int fd, struct sockaddr __user *upeer_sockaddr,
+ {
+ 	int ret = -EBADF;
+ 	struct fd f;
+-
++	printk("printk() called in accept()\n");
+ 	f = fdget(fd);
+ 	if (f.file) {
+ 		ret = __sys_accept4_file(f.file, upeer_sockaddr,
+@@ -2015,7 +2015,6 @@ SYSCALL_DEFINE3(accept, int, fd, struct sockaddr __user *, upeer_sockaddr,
+ {
+ 	return __sys_accept4(fd, upeer_sockaddr, upeer_addrlen, 0);
+ }
+-
+ /*
+  *	Attempt to connect to a socket with the server address.  The address
+  *	is in user space so we verify it is OK and move it to kernel space.
+@@ -2055,7 +2054,7 @@ int __sys_connect(int fd, struct sockaddr __user *uservaddr, int addrlen)
+ {
+ 	int ret = -EBADF;
+ 	struct fd f;
+-
++	printk("printk() called in connect()\n");
+ 	f = fdget(fd);
+ 	if (f.file) {
+ 		struct sockaddr_storage address;
